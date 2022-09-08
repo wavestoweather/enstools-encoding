@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from enstools.encodings import FilterEncodingForXarray, FilterEncodingForH5py, Compressors, CompressionModes
+from enstools.encoding import FilterEncodingForXarray, FilterEncodingForH5py, Compressors, CompressionModes
 
 dummy_output_file = "example_01.nc"
 
