@@ -39,3 +39,8 @@ class CompressionModes(Enum):
     # Other modes
     ALL = auto()
     NONE = None
+
+
+compressor_aliases = {mode: str(mode).replace("Compressors.", "").lower() for mode in Compressors}
+
+compression_mode_aliases = {mode: str(mode).replace("CompressionModes.", "").lower() for mode in CompressionModes}
