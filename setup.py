@@ -8,7 +8,7 @@ setup(name="enstools-encoding",
       version="0.1.0",
       author="Oriol Tintó",
       author_email="oriol.tinto@lmu.de",
-      packages=[f"enstools.encoding"],
+      packages=["enstools.encoding", "enstools.encoding.compressors"],
       namespace_packages=['enstools'],
 
       install_requires=[
