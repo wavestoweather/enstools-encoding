@@ -8,6 +8,7 @@ from . import rules
 from .compressors.sz import SZ
 from .compressors.zfp import Zfp
 from .compressors.blosc import Blosc
+from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
 
@@ -20,6 +21,9 @@ class _Mapping(Mapping):
 
     def __getitem__(self, item):
         return self._kwargs[item]
+
+    def __setitem__(self, key, value):
+        self._kwargs[key] = value
 
     def __iter__(self):
         return iter(self._kwargs)
@@ -53,9 +57,7 @@ class FilterEncodingForH5py(_Mapping):
         self.mode = mode
         self.parameter = parameter
 
-    @property
-    def _kwargs(self):
-        return self.filter_mapping()
+        self._kwargs = self.filter_mapping()
 
     @staticmethod
     def from_string(string: str) -> Any:
@@ -84,6 +86,8 @@ class FilterEncodingForH5py(_Mapping):
             mode = str(self.mode).lower().split('.')[-1]
             options = {mode: self.parameter}
             return SZ(**options)
+        elif self.compressor is Compressors.NONE:
+            return NoCompression()
         else:
             raise NotImplementedError
 
@@ -102,6 +106,17 @@ class FilterEncodingForXarray(_Mapping):
     def __init__(self, dataset: xarray.Dataset, compression: Union[str, dict]):
         self.dataset = dataset
 
+        # Process the compression argument to get a dictionary with a specification for each variable
+        dict_of_strings = self.get_dictionary_of_specifications(compression)
+
+        # Convert each string specification into a CompressionDataArraySpecification
+        variable_encodings = {key: FilterEncodingForH5py.from_string(value) for key, value in
+                              dict_of_strings.items()}
+        # Save it
+        self.variable_encodings = variable_encodings
+
+    @staticmethod
+    def get_dictionary_of_specifications(compression: Union[str, dict]):
         # The compression parameter can be a string or a dictionary.
         # In case it is a string, it can be directly a compression specification or a yaml file.
 
@@ -121,15 +136,12 @@ class FilterEncodingForXarray(_Mapping):
                 # Convert the single string in a dictionary with an entry for each specified variable plus the defaults
                 # for data and coordinates
                 dict_of_strings = compression_string_to_dictionary(compression)
+        elif compression is None:
+            dict_of_strings = {rules.DATA_DEFAULT_LABEL: None, rules.COORD_LABEL: None}
         else:
             raise TypeError(
                 f"The argument 'compression' should be a string or a dictionary. It is {type(compression)!r}-")
-
-        # Convert each string specification into a CompressionDataArraySpecification
-        variable_encodings = {key: FilterEncodingForH5py.from_string(value) for key, value in
-                              dict_of_strings.items()}
-        # Save it
-        self.variable_encodings = variable_encodings
+        return dict_of_strings
 
     @property
     def _kwargs(self):
@@ -141,15 +153,20 @@ class FilterEncodingForXarray(_Mapping):
         coordinates_default = self.variable_encodings[rules.COORD_LABEL]
 
         # Set encoding for coordinates
-        coordinates = {coord: coordinates_default for coord in self.dataset.coords}
+        coordinate_encodings = {coord: coordinates_default for coord in self.dataset.coords}
         # Set encoding for data variables
-        variables = {
+        data_variable_encodings = {
             var: self.variable_encodings[str(var)] if var in self.variable_encodings else data_default for
             var
             in self.dataset.data_vars}
 
+        # Add chunking?
+        for variable in self.dataset.data_vars:
+            chunks = {k: v if k != "time" else 1 for k, v in self.dataset[variable].sizes.items()}
+            data_variable_encodings[variable]["chunksizes"] = tuple(chunks.values())
+
         # Merge
-        all_encodings = {**coordinates, **variables}
+        all_encodings = {**coordinate_encodings, **data_variable_encodings}
 
         return all_encodings
 
@@ -166,6 +183,9 @@ def compression_string_to_object(compression: str) -> FilterEncodingForH5py:
     """
     Receive a CFS string and return a CompressionDataArraySpecification
     """
+    if compression in [None, "None", "none"]:
+        return FilterEncodingForH5py(compressor=Compressors.NONE, mode=CompressionModes.NONE, parameter=None)
+
     arguments = compression.split(rules.COMPRESSION_SPECIFICATION_SEPARATOR)
     mode = ""
     parameter = 0.0
