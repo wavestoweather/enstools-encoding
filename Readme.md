@@ -1,13 +1,14 @@
-# Enstools-Compression
+# Enstools-Encoding
 
-Library to write compressed files easily as possible with **xarray** using **hdf5 filters**.
+Library to generate the encodings to write compressed files easily as possible with **xarray** using **hdf5 filters**.
 
 Its only capability is to provide the encodings that **xarray** and **h5py** need in order to write files using filters.
 
 ## Quickstart
 Using lossy compression with xarray can be as easy as adding a single line and an argument in the call to **.to_netcdf()** :
+
 ```python
-from enstools.compression import FilterEncodingForXarray
+from enstools.encodings import FilterEncodingForXarray
 
 ...
 encoding = FilterEncodingForXarray(dataset, "lossy,sz,rel,1.e-4")
@@ -84,7 +85,7 @@ Coordinates are treated separately, by default are compressed using `lossless`, 
 Save an **xarray** dataset using losslessly compression:
 
 ```python
-from enstools.compression import FilterEncodingForXarray
+from enstools.encodings import FilterEncodingForXarray
 
 ...
 encoding = FilterEncodingForXarray(dataset, "lossless")
@@ -94,7 +95,7 @@ dataset.to_netcdf(dummy_output_file, encoding=encoding, engine="h5netcdf")
 Also **xarray** but with multiple variables and lossy compression:
 
 ```python
-from enstools.compression import FilterEncodingForXarray
+from enstools.encodings import FilterEncodingForXarray
 
 ...
 specification_string = "temperature:lossy,sz,abs,0.1 precipitation:lossy,sz,pw_rel,0.001 default:lossless"
@@ -105,7 +106,7 @@ dataset.to_netcdf(dummy_output_file, encoding=encoding, engine="h5netcdf")
 If we want to directly use **h5py** we can do the following:
 
 ```python
-from enstools.compression import FilterEncodingForH5py
+from enstools.encodings import FilterEncodingForH5py
 
 ...
 
@@ -121,7 +122,7 @@ f.close()
 Or without using specification strings:
 
 ```python
-from enstools.compression import FilterEncodingForH5py, Compressors, CompressionModes
+from enstools.encodings import FilterEncodingForH5py, Compressors, CompressionModes
 
 ...
 
