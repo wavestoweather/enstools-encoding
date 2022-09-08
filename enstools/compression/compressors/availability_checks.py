@@ -17,7 +17,7 @@ def check_filter_availability(filter_id):
     return h5py.h5z.filter_avail(filter_id)
 
 
-def check_all_filters_availability():
+def check_filters_availability():
     """
     Function to check that all the filters of interest are available.
     :return:  bool
@@ -75,7 +75,7 @@ def filter_availability_report():
         print("Filter SZ is NOT available")
 
 
-def check_compression_filters_availability(dataset):
+def check_dataset_filters_availability(dataset):
     """
     Check if the compression filters used in a dataset are available.
     """
@@ -106,3 +106,14 @@ def check_compression_filters_availability(dataset):
             if not check_blosc_availability():
                 return False
     return True
+
+
+def check_libpressio_availability():
+    """
+    Check if libpressio is available.
+    """
+    try:
+        from libpressio import PressioCompressor
+        return True
+    except ModuleNotFoundError:
+        return False
