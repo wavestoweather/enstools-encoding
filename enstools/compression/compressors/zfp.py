@@ -1,7 +1,6 @@
 import struct
 
-from h5py._hl.filters import FilterRefBase  # noqa
-
+from .compressor_class import Compressor
 from ..errors import FilterNotAvailable, EnstoolsCompressionError
 from .availability_checks import check_zfp_availability
 
@@ -15,7 +14,7 @@ def zfp_pack_error(error: float) -> tuple[int, int]:
     return high, low
 
 
-class Zfp(FilterRefBase):
+class Zfp(Compressor):
     filter_id = zfp_filter_id
 
     def __init__(self,
