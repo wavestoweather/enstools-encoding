@@ -14,7 +14,6 @@ setup(name="enstools-compression",
       install_requires=[
           "xarray",
           "PyYAML",
-          "hdf5plugin",
           "h5py",
           "h5netcdf",
       ],

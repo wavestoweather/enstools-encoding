@@ -1,5 +1,4 @@
 xarray
 PyYAML
-hdf5plugin
 h5py
 h5netcdf
