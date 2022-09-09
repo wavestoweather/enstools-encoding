@@ -4,7 +4,9 @@ import pandas as pd
 import yaml
 
 from enstools.encoding import FilterEncodingForXarray, FilterEncodingForH5py, Compressors, CompressionModes
+import enstools.encoding.compressors.availability_checks
 
+enstools.encoding.compressors.availability_checks.SKIP_CHECKS = True
 
 class TestClass:
     def test_create_dataset(self) -> None:
