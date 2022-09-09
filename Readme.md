@@ -1,8 +1,13 @@
-# Enstools-Encoding
+# Ensemble Tools - Encoding
 
 Library to generate the encodings to write compressed files easily as possible with **xarray** using **hdf5 filters**.
 
 Its only capability is to provide the encodings that **xarray** and **h5py** need in order to write files using filters.
+
+This package was originally inside [Ensemble Tools](https://github.com/wavestoweather/enstools) but can be used standalone.
+
+It is also a building block for [Ensemble Tools - Compression](https://github.com/wavestoweather/enstools-compression),
+which includes a command line tool to make compression even easier.
 
 ## Quickstart
 Using lossy compression with xarray can be as easy as adding a single line and an argument in the call to **.to_netcdf()** :
@@ -17,6 +22,16 @@ dataset.to_netcdf(dummy_output_file, encoding=encoding, engine="h5netcdf")
 ```
 
 Check below for more details on how to do it.
+
+## Installation using pip
+
+`pip` is the easiest way to install `enstools-encoding` along with all dependencies:
+
+```
+pip install git+https://github.com/wavestoweather/enstools-compression.git
+```
+
+
 
 ## Compression Specification Format
 
@@ -136,3 +151,14 @@ f.close()
 
 ```
 
+
+# Acknowledgment and license
+
+Ensemble Tools - Encoding (`enstools-encoding`) is a collaborative development within
+Waves to Weather (SFB/TRR165) coordinated by the subproject 
+[Z2](https://www.wavestoweather.de/research_areas/phase2/z2) and funded by the
+German Research Foundation (DFG).
+
+A full list of code contributors can [CONTRIBUTORS.md](./CONTRIBUTORS.md).
+
+The code is released under an [Apache-2.0 licence](./LICENSE).
