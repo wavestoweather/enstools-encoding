@@ -1,0 +1,16 @@
+stages:
+    - test
+    - examples
+
+test_slurm:
+    stage: test
+    script: ./run_tests.sh
+    tags:
+            - slurm.meteo.physik.lmu.de
+
+test_docker:
+    stage: test
+    image: ubuntu:rolling
+    tags: 
+            - docker.meteo.physik.lmu.de
+    script: ./run_tests.sh
