@@ -1,4 +1,5 @@
 import struct
+from typing import Tuple
 
 from .compressor_class import Compressor
 from ..errors import FilterNotAvailable, EnstoolsCompressionError
@@ -7,7 +8,7 @@ from .availability_checks import check_zfp_availability
 zfp_filter_id = 32013
 
 
-def zfp_pack_error(error: float) -> tuple[int, int]:
+def zfp_pack_error(error: float) -> Tuple[int, int]:
     packed = struct.pack('<d', error)  # Pack as IEEE 754 double
     high = struct.unpack('<I', packed[0:4])[0]  # Unpack high bits as unsigned int
     low = struct.unpack('<I', packed[4:8])[0]
