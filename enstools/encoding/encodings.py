@@ -11,7 +11,7 @@ from .compressors.blosc import Blosc
 from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
-
+from copy import deepcopy
 
 class _Mapping(Mapping):
     """
@@ -153,10 +153,10 @@ class FilterEncodingForXarray(_Mapping):
         coordinates_default = self.variable_encodings[rules.COORD_LABEL]
 
         # Set encoding for coordinates
-        coordinate_encodings = {coord: coordinates_default for coord in self.dataset.coords}
+        coordinate_encodings = {coord: deepcopy(coordinates_default) for coord in self.dataset.coords}
         # Set encoding for data variables
         data_variable_encodings = {
-            var: self.variable_encodings[str(var)] if var in self.variable_encodings else data_default for
+            str(var): deepcopy(self.variable_encodings[str(var)]) if var in self.variable_encodings else deepcopy(data_default) for
             var
             in self.dataset.data_vars}
 

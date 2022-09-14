@@ -13,7 +13,7 @@ except FileNotFoundError:
 
 # perform the actual install operation
 setup(name="enstools-encoding",
-      version="0.1.6",
+      version="0.1.7",
       author="Oriol Tintó",
       author_email="oriol.tinto@lmu.de",
       long_description=long_description,
