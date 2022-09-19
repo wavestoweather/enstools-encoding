@@ -3,12 +3,13 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from enstools.encoding import FilterEncodingForXarray, FilterEncodingForH5py, Compressors, CompressionModes
+from enstools.encoding.api import FilterEncodingForXarray, FilterEncodingForH5py, Compressors, CompressionModes
 import enstools.encoding.compressors.availability_checks
 
 enstools.encoding.compressors.availability_checks.SKIP_CHECKS = True
 
-class TestClass:
+
+class TestEncoding:
     def test_create_dataset(self) -> None:
         # Create a dummy dataset with few variables
         dataset = create_dummy_xarray_dataset(variables=["temperature", "vorticity", "pressure"])

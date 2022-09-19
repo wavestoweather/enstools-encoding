@@ -13,6 +13,7 @@ from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
 from copy import deepcopy
 
+
 class _Mapping(Mapping):
     """
     Subclass to implement dunder methods that are mandatory for Mapping to avoid repeating the code everywhere.
@@ -103,7 +104,7 @@ class FilterEncodingForXarray(_Mapping):
     The kind of encoding that xarray expects is a mapping between the variables and their corresponding h5py encoding.
     """
 
-    def __init__(self, dataset: xarray.Dataset, compression: Union[str, dict]):
+    def __init__(self, dataset: xarray.Dataset, compression: Union[str, dict, None]):
         self.dataset = dataset
 
         # Process the compression argument to get a dictionary with a specification for each variable
