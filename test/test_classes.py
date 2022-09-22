@@ -6,6 +6,7 @@ import yaml
 from enstools.encoding.api import FilterEncodingForXarray, FilterEncodingForH5py, Compressors, CompressionModes
 import enstools.encoding.compressors.availability_checks
 
+# Trick to disable the filter availability checks during the tests.
 enstools.encoding.compressors.availability_checks.SKIP_CHECKS = True
 
 
@@ -39,14 +40,16 @@ class TestEncoding:
         encoding = FilterEncodingForXarray(dataset=dataset, compression=compression_specification_dictionary)
 
     def test_FilterEncodingForXarray_file(self) -> None:
+        import os
         dataset = create_dummy_xarray_dataset(variables=["temperature", "vorticity", "pressure"])
         compression_specification_dictionary = {"default": "lossy,zfp,rate,4", "vorticity": "lossy,sz,abs,0.1"}
         compression_specification_file = "compression_specification.yaml"
         with open(compression_specification_file, "w") as stream:
             yaml.dump(compression_specification_dictionary, stream)
-
         #    Pass the file path as a compression argument
         encoding = FilterEncodingForXarray(dataset=dataset, compression=compression_specification_file)
+
+        os.remove(compression_specification_file)
 
     def test_FilterEncodingForH5py(self):
         h5encoding = FilterEncodingForH5py(compressor=Compressors.ZFP, mode=CompressionModes.RATE, parameter=5.0)
