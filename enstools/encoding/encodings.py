@@ -12,6 +12,7 @@ from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
 from copy import deepcopy
+from pathlib import Path
 
 
 class _Mapping(Mapping):
@@ -117,7 +118,7 @@ class FilterEncodingForXarray(_Mapping):
         self.variable_encodings = variable_encodings
 
     @staticmethod
-    def get_dictionary_of_specifications(compression: Union[str, dict]):
+    def get_dictionary_of_specifications(compression: Union[str, dict, Path]):
         # The compression parameter can be a string or a dictionary.
         # In case it is a string, it can be directly a compression specification or a yaml file.
 
@@ -125,6 +126,11 @@ class FilterEncodingForXarray(_Mapping):
             # Just to make sure that we have all the mandatory fields (default, coordinates), we will convert
             # the input dictionary to a single specification string and convert it back.
             dict_of_strings = compression_string_to_dictionary(compression_dictionary_to_string(compression))
+        elif isinstance(compression, Path):
+            if compression.exists():
+                with compression.open("r") as stream:
+                    dict_of_strings = yaml.safe_load(stream)
+                dict_of_strings = compression_string_to_dictionary(compression_dictionary_to_string(dict_of_strings))
         elif isinstance(compression, str):
             # Check if it corresponds to an existing file
             if os.path.exists(compression):
