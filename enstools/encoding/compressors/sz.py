@@ -3,14 +3,19 @@ import logging
 from .compressor_class import Compressor
 from .availability_checks import check_sz_availability
 from ..errors import FilterNotAvailable
+from typing import Tuple
+import struct
 
 # The unique filter id given by HDF5
 sz_filter_id = 32017
 
 
-def sz_pack_error(error: float) -> int:
+def sz_pack_error(error: float) -> Tuple[int, int]:
     from struct import pack, unpack
-    return unpack('I', pack('<f', error))[0]  # Pack as IEEE 754 single
+    packed = pack('<d', error)  # Pack as IEEE 754 double
+    high = unpack('<I', packed[0:4])[0]  # Unpack high bits as unsigned int
+    low = unpack('<I', packed[4:8])[0]
+    return low,high
 
 
 class SZ(Compressor):
@@ -36,7 +41,7 @@ class SZ(Compressor):
             raise NotImplementedError("One of the options need to be provided: abs, rel or pw_rel .")
 
         packed_error = sz_pack_error(parameter)
-        compression_opts = (sz_mode, packed_error, packed_error, packed_error, packed_error)
+        compression_opts = (sz_mode, *packed_error, *packed_error, *packed_error, *packed_error)
 
         logging.info(f"SZ mode {sz_mode} used.")
         logging.info(f"filter options {compression_opts}")
