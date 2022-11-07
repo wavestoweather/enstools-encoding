@@ -22,7 +22,7 @@ At the current stage it is possible to generate encodings for three compressors:
 Using lossy compression with xarray can be as easy as adding a single line and an argument in the call to **.to_netcdf()** :
 
 ```python
-from enstools.encoding import FilterEncodingForXarray
+from enstools.encoding.api import FilterEncodingForXarray
 
 ...
 encoding = FilterEncodingForXarray(dataset, "lossy,sz,rel,1.e-4")
@@ -109,7 +109,7 @@ Coordinates are treated separately, by default are compressed using `lossless`, 
 Save an **xarray** dataset using losslessly compression:
 
 ```python
-from enstools.encoding import FilterEncodingForXarray
+from enstools.encoding.api import FilterEncodingForXarray
 
 ...
 encoding = FilterEncodingForXarray(dataset, "lossless")
@@ -119,7 +119,7 @@ dataset.to_netcdf(dummy_output_file, encoding=encoding, engine="h5netcdf")
 Also **xarray** but with multiple variables and lossy compression:
 
 ```python
-from enstools.encoding import FilterEncodingForXarray
+from enstools.encoding.api import FilterEncodingForXarray
 
 ...
 specification_string = "temperature:lossy,sz,abs,0.1 precipitation:lossy,sz,pw_rel,0.001 default:lossless"
@@ -130,7 +130,7 @@ dataset.to_netcdf(dummy_output_file, encoding=encoding, engine="h5netcdf")
 If we want to directly use **h5py** we can do the following:
 
 ```python
-from enstools.encoding import FilterEncodingForH5py
+from enstools.encoding.api import FilterEncodingForH5py
 
 ...
 
@@ -146,7 +146,7 @@ f.close()
 Or without using specification strings:
 
 ```python
-from enstools.encoding import FilterEncodingForH5py, Compressors, CompressionModes
+from enstools.encoding.api import FilterEncodingForH5py, Compressors, CompressionModes
 
 ...
 
