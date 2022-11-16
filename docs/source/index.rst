@@ -1,14 +1,25 @@
-Welcome to Enstools-Compression's documentation!
+Welcome to Enstools-Encoding's documentation!
 =================================================
-enstools-compression is a set of tools to help users find appropriate compression parameters for their datasets.
+**enstools-encoding** is a minimal set of interfaces to convert a string compiling with a **Compression Specification Format**
+to the arguments that are actually needed to write files compressed with **hdf5 filters** from **h5py**, **h5netcdf** or **xarray**.
 
-It includes a Command Line Interface for some of its features.
+This package was extracted from `enstools <https://github.com/wavestoweather/enstools>`_ |enstoolsbadge|, and it's a key piece of `enstools-compression <https://github.com/wavestoweather/enstools-compression>`_ |compressionbadge|.
 
+.. |enstoolsbadge| image:: https://readthedocs.org/projects/enstools/badge/?version=latest
+    :target: https://enstools.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. |compressionbadge| image:: https://readthedocs.org/projects/enstools-compression/badge/?version=latest
+    :target: https://enstools-compression.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 **Contents**:
 
 .. toctree::
     :maxdepth: 2
+
+    api.rst
+    CompressionSpecificationFormat.rst
 
 
 
