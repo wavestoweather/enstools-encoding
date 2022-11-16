@@ -11,9 +11,16 @@ except FileNotFoundError:
     long_description = ""
 
 
+def get_version():
+    from pathlib import Path
+    version_path = Path(__file__).parent / "VERSION"
+    with version_path.open() as version_file:
+        return version_file.read().strip()
+
+
 # perform the actual install operation
 setup(name="enstools-encoding",
-      version="0.1.10",
+      version=get_version(),
       author="Oriol Tintó",
       author_email="oriol.tinto@lmu.de",
       long_description=long_description,
