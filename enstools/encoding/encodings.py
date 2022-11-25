@@ -42,10 +42,7 @@ class FilterEncodingForH5py(_Mapping):
 
     It has a method to create a new instance from a specification string,
     a method to get the corresponding specification string from an existing object
-    and a method to obtain the corresponding FilterRefBase expected by H5py.
-
-
-    FilterRefBase subclasses help creating the mapping with the corresponding filter_id and filter_options.
+    and a method to obtain the corresponding mapping expected by h5py.
 
     """
 
