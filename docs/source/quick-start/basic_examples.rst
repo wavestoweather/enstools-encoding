@@ -1,5 +1,5 @@
-Quickstart
-==========
+Basic Examples
+==============
 
 Using **lossy compression** with xarray can be as easy as adding a **single line** and an argument in the call to **.to_netcdf()** :
 
@@ -12,18 +12,6 @@ Using **lossy compression** with xarray can be as easy as adding a **single line
     dataset.to_netcdf(dummy_output_file, encoding=encoding, engine="h5netcdf")
     ...
 
-Check below for more details on how to do it.
-
-Installation using pip
-----------------------
-
-`pip` is the easiest way to install `enstools-encoding` along with all dependencies:
-
-    >>> pip install enstools-encoding
-
-
-Examples
---------
 
 Save an **xarray** dataset using losslessly compression:
 

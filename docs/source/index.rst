@@ -1,5 +1,15 @@
 Welcome to Enstools-Encoding's documentation! |docsbadge|
 =================================================
+
+
+.. attention::
+    This package is a building block of `enstools-compression <https://github.com/wavestoweather/enstools-compression>`_.
+    The recomendation is to directly use **enstools-compression**.
+    The only purpose of splitting the package was to provide a way of using compression filters with **xarray** without adding too much dependencies.
+    It might be the main sound reason to use this package separately.
+    
+
+
 **enstools-encoding** is a minimal set of interfaces to convert a string compiling with a **Compression Specification Format**
 to the arguments that are actually needed to write files compressed with **hdf5 filters** from **h5py**, **h5netcdf** or **xarray**.
 
@@ -21,7 +31,7 @@ It has been developed within the framework of **Waves to Weather** [1]_.
             :alt: Alternative text
             :align: center
 
-        .. button-ref:: quick-start
+        .. button-ref:: quick-start/index
             :expand:
             :color: secondary
             :click-parent:
@@ -31,17 +41,17 @@ It has been developed within the framework of **Waves to Weather** [1]_.
     .. grid-item-card::
         :columns: 5
 
-        .. image:: ./images/icons/user_guide.svg
+        .. image:: ./images/icons/format.svg
             :width: 50%
             :alt: Alternative text
             :align: center
 
-        .. button-ref:: user-guide
+        .. button-ref:: CompressionSpecificationFormat
             :expand:
             :color: secondary
             :click-parent:
 
-            To the User Guide
+            Compression Specification Format
 
     .. grid-item-card::
         :columns: 5
@@ -79,8 +89,8 @@ It has been developed within the framework of **Waves to Weather** [1]_.
     :maxdepth: 1
     :hidden:
 
-    quick-start.rst
-    user-guide.rst
+    quick-start/index.rst
+    CompressionSpecificationFormat.rst
     api.rst
     contribute.rst
 
