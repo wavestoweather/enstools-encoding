@@ -1,15 +1,16 @@
 Compression Specification Format
 ================================
 
-We defined our own specification format to represent the compression parameters that we want to apply to the data.
+In order to define compression specifications in a way that makes it readable and easy to use by different applications in differen programming languages, we defined our own Compression Specification Format.
 One example looks like this:
 
     >>> lossy,zfp,rate,4.0
 
-Its purpose is to represent the specifications in a way that is easy to understand and use.
+Its purpose is to represent the specifications in a way that are easy to understand and use.
 
-The currently implemented compressors include Blosc, for lossless compression, and ZFP and SZ for lossy compression.
-For lossless compression, one can simply use:
+The currently implemented compressors include `Blosc <https://www.blosc.org/>`_ for lossless compression,
+and `ZFP <https://computing.llnl.gov/projects/zfp>`_ and `SZ <https://szcompressor.org/>`_ for lossy compression.
+In order to use lossless compression, one can simply write:
 
     >>> lossless
 
@@ -29,20 +30,20 @@ One example with a different backend and compression level could be:
 
 
 For lossy compression, it is mandatory to include the compressor, the mode and the parameter.
-At the moment two lossy compressors are supported: SZ and ZFP.
+At the moment two lossy compressors are supported: **SZ** and **ZFP**.
 
 The two compressors have different methods and different names for them:
-    -SZ:
+    -**SZ**:
         - **abs**: absolute threshold mode
         - **rel**: relative threshold mode
         - **pw_rel**: point-wise relative threshold mode
-    -ZFP:
+    -**ZFP**:
         - **accuracy**: absolute threshold mode
         - **rate**: number of bits-per-value
         - **precision**: keep a certain bits of precision
 
 
-Few examples:
+Few examples of lossy compression specifications:
 
 .. code::
 
@@ -64,37 +65,12 @@ It is possible too to specify the default value for the variables that are not e
 
 In case a specification doesn't have a variable name, it will be considered the default. i.e:
 
-    >>> `var1:lossy,zfp,rate,4.0 lossy,sz,abs,0.1` -> `var1:lossy,zfp,rate,4.0 default:lossy,sz,abs,0.1`
+    >>> var1:lossy,zfp,rate,4.0 lossy,sz,abs,0.1 -> var1:lossy,zfp,rate,4.0 default:lossy,sz,abs,0.1
 
 If no default value is provided, lossless compression will be applied:
 
-    >>> `var1:lossy,zfp,rate,4.0` ->  `var1:lossy,zfp,rate,4.0 default:lossless`
+    >>> var1:lossy,zfp,rate,4.0 ->  var1:lossy,zfp,rate,4.0 default:lossless
 
-Coordinates are treated separately, by default are compressed using `lossless`, although it is possible to change that:
+Coordinates are treated separately, by default are compressed using **lossless**, although it is possible to change that:
 
-    >>> `coordinates:lossy,zfp,rate,6`
-
-
-
-For lossless compression, we can choose the backend and the compression leven as follows
-    >>> lossless,backend,compression_level(from 1 to 9)
-
-The backend must be one of the following options:
-
-
-
-For lossy compression, we can choose the compressor (sz or zfp),
-the method and the method parameter.
-
-    >>> lossy,compressor,mode,parameter
-
-Some examples:
-    - lossless
-    - lossless,zlib,5
-    - lossy,zfp,accuracy,0.00001
-    - lossy,zfp,precision,12
-    - lossy,zfp,rate,3.2
-    - lossy,sz,abs,0.1
-    - lossy,sz,rel,0.0001
-    - lossy,sz,pw_rel,1.e-6
-
+    >>> coordinates:lossy,zfp,rate,6
