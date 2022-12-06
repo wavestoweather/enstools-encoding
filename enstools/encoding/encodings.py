@@ -5,9 +5,7 @@ import xarray
 import yaml
 
 from . import rules
-from .compressors.sz import SZ
-from .compressors.zfp import Zfp
-from .compressors.blosc import Blosc
+from hdf5plugin import SZ, Zfp, Blosc
 from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
@@ -83,7 +81,16 @@ class FilterEncodingForH5py(_Mapping):
             return Zfp(**options)
         elif self.compressor is Compressors.SZ:
             mode = str(self.mode).lower().split('.')[-1]
-            options = {mode: self.parameter}
+
+            # In the hdf5plugin implementation of SZ we ended up using more self-explanatory names so we need to
+            # map the names here
+            sz_mode_map = {
+                "abs": "absolute",
+                "rel": "relative",
+                "pw_rel": "pointwise_relative"
+            }
+
+            options = {sz_mode_map[mode]: self.parameter}
             return SZ(**options)
         elif self.compressor is Compressors.NONE:
             return NoCompression()
@@ -167,7 +174,9 @@ class FilterEncodingForXarray(_Mapping):
         # Add chunking?
         for variable in self.dataset.data_vars:
             chunks = {k: v if k != "time" else 1 for k, v in self.dataset[variable].sizes.items()}
-            data_variable_encodings[variable]["chunksizes"] = tuple(chunks.values())
+            chunk_sizes = tuple(chunks.values())
+            # Ugly python magic to add chunk sizes into the encoding mapping object.
+            data_variable_encodings[variable]._kwargs._kwargs["chunksizes"] = chunk_sizes  # noqa
 
         # Merge
         all_encodings = {**coordinate_encodings, **data_variable_encodings}
