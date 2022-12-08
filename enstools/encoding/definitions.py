@@ -9,6 +9,7 @@ class Compressors(Enum):
     BLOSC = 32001
     ZFP = 32013
     SZ = 32017
+    SZ3 = 32024
     ALL = auto()
 
 
@@ -27,6 +28,12 @@ class CompressionModes(Enum):
     ABS = auto()
     REL = auto()
     PW_REL = auto()
+
+    # SZ3 Modes
+    # ABS
+    # REL
+    PSNR = auto()
+    NORM2 = auto()
 
     # BLOSC Modes
     BLOSCLZ = auto()
