@@ -5,7 +5,7 @@ import xarray
 import yaml
 
 from . import rules
-from hdf5plugin import SZ, Zfp, Blosc
+from hdf5plugin import SZ, SZ3, Zfp, Blosc
 from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
@@ -92,6 +92,20 @@ class FilterEncodingForH5py(_Mapping):
 
             options = {sz_mode_map[mode]: self.parameter}
             return SZ(**options)
+        elif self.compressor is Compressors.SZ3:
+            mode = str(self.mode).lower().split('.')[-1]
+
+            # In the hdf5plugin implementation of SZ3 were also using more self-explanatory names
+            # We need to map the names as well.
+            sz3_mode_map = {
+                "abs": "absolute",
+                "rel": "relative",
+                "psnr": "peak_signal_to_noise_ratio",
+                "norm2": "norm2",
+            }
+
+            options = {sz3_mode_map[mode]: self.parameter}
+            return SZ3(**options)
         elif self.compressor is Compressors.NONE:
             return NoCompression()
         else:
