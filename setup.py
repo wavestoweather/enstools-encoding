@@ -34,5 +34,6 @@ setup(name="enstools-encoding",
           "PyYAML",
           "h5py",
           "h5netcdf",
+          "hdf5plugin",
       ],
       )

@@ -6,9 +6,16 @@ import yaml
 
 from . import rules
 from hdf5plugin import SZ, Zfp, Blosc
+
+try:
+    from hdf5plugin import SZ3
+except ImportError:
+    pass
+
 from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
-from .errors import WrongCompressionSpecificationError, WrongCompressionModeError
+from .errors import WrongCompressionSpecificationError, WrongCompressionModeError, WrongCompressorError, \
+    WrongParameterError
 from copy import deepcopy
 from pathlib import Path
 
@@ -17,7 +24,7 @@ class _Mapping(Mapping):
     """
     Subclass to implement dunder methods that are mandatory for Mapping to avoid repeating the code everywhere.
     """
-    _kwargs: dict
+    _kwargs: Mapping
 
     def __getitem__(self, item):
         return self._kwargs[item]
@@ -45,16 +52,38 @@ class FilterEncodingForH5py(_Mapping):
     """
 
     def __init__(self,
-                 compressor: Compressors,
-                 mode: Union[CompressionModes, None],
-                 parameter: Union[float, None],
+                 compressor: Union[Compressors, str],
+                 mode: Union[CompressionModes, str, None],
+                 parameter: Union[float, int, None],
                  ):
         # Init basic components
-        self.compressor = compressor
-        self.mode = mode
-        self.parameter = parameter
+        self.set_compressor(compressor)
+        self.set_mode(mode)
+        self.set_parameter(parameter)
 
         self._kwargs = self.filter_mapping()
+
+    def set_compressor(self, compressor: Union[Compressors, str]):
+        if isinstance(compressor, Compressors):
+            self.compressor = compressor
+        elif isinstance(compressor, str):
+            self.compressor = Compressors[compressor.upper()]
+        else:
+            raise NotImplementedError
+
+    def set_mode(self, mode: Union[CompressionModes, str, None]):
+        if isinstance(mode, CompressionModes):
+            self.mode = mode
+        elif isinstance(mode, str):
+            self.mode = CompressionModes[mode.upper()]
+        elif mode is None:
+            self.mode = None
+        else:
+            raise NotImplementedError
+
+    def set_parameter(self, parameter: [float, int, None]):
+        # Should I add further checks here?
+        self.parameter = parameter
 
     @staticmethod
     def from_string(string: str) -> Any:
@@ -73,6 +102,7 @@ class FilterEncodingForH5py(_Mapping):
         """
         Method to get the corresponding FilterRefBase expected by h5py/xarray
         """
+
         if self.compressor is Compressors.BLOSC:
             return Blosc(clevel=9)
         elif self.compressor is Compressors.ZFP:
@@ -92,6 +122,20 @@ class FilterEncodingForH5py(_Mapping):
 
             options = {sz_mode_map[mode]: self.parameter}
             return SZ(**options)
+        elif self.compressor is Compressors.SZ3:
+            mode = str(self.mode).lower().split('.')[-1]
+
+            # In the hdf5plugin implementation of SZ3 were also using more self-explanatory names
+            # We need to map the names as well.
+            sz3_mode_map = {
+                "abs": "absolute",
+                "rel": "relative",
+                "psnr": "peak_signal_to_noise_ratio",
+                "norm2": "norm2",
+            }
+
+            options = {sz3_mode_map[mode]: self.parameter}
+            return SZ3(**options)
         elif self.compressor is Compressors.NONE:
             return NoCompression()
         else:
@@ -124,7 +168,11 @@ class FilterEncodingForXarray(_Mapping):
     @staticmethod
     def get_dictionary_of_specifications(compression: Union[str, dict, Path]):
         # The compression parameter can be a string or a dictionary.
+
         # In case it is a string, it can be directly a compression specification or a yaml file.
+        # If it is a file, convert it to a Path
+        if isinstance(compression, str) and os.path.exists(compression):
+            compression = Path(compression)
 
         if isinstance(compression, dict):
             # Just to make sure that we have all the mandatory fields (default, coordinates), we will convert
@@ -136,17 +184,9 @@ class FilterEncodingForXarray(_Mapping):
                     dict_of_strings = yaml.safe_load(stream)
                 dict_of_strings = compression_string_to_dictionary(compression_dictionary_to_string(dict_of_strings))
         elif isinstance(compression, str):
-            # Check if it corresponds to an existing file
-            if os.path.exists(compression):
-                with open(compression, "r") as stream:
-                    dict_of_strings = yaml.safe_load(stream)
-                # Just to make sure that we have all the mandatory fields (default, coordinates), we will convert
-                # the input dictionary to a single specification string and convert it back.
-                dict_of_strings = compression_string_to_dictionary(compression_dictionary_to_string(dict_of_strings))
-            else:
-                # Convert the single string in a dictionary with an entry for each specified variable plus the defaults
-                # for data and coordinates
-                dict_of_strings = compression_string_to_dictionary(compression)
+            # Convert the single string in a dictionary with an entry for each specified variable plus the defaults
+            # for data and coordinates
+            dict_of_strings = compression_string_to_dictionary(compression)
         elif compression is None:
             dict_of_strings = {rules.DATA_DEFAULT_LABEL: None, rules.COORD_LABEL: None}
         else:
@@ -200,7 +240,7 @@ def compression_string_to_object(compression: str) -> FilterEncodingForH5py:
         return FilterEncodingForH5py(compressor=Compressors.NONE, mode=CompressionModes.NONE, parameter=None)
 
     arguments = compression.split(rules.COMPRESSION_SPECIFICATION_SEPARATOR)
-    mode = ""
+    mode = None
     parameter = 0.0
     if len(arguments) == 4:
         keyword, compressor, mode, parameter = arguments
@@ -212,12 +252,21 @@ def compression_string_to_object(compression: str) -> FilterEncodingForH5py:
                 f"please use {rules.VARIABLE_NAME_SEPARATOR!r}"
             )
 
-        compressor = Compressors[compressor.upper()]
-        if mode.upper() not in CompressionModes.__members__:
-            raise WrongCompressionModeError(
-                f"Compression mode {mode} is not valid")
-        mode = CompressionModes[mode.upper()]
-        parameter = float(parameter)
+        try:
+            compressor = Compressors[compressor.upper()]
+        except KeyError:
+            raise WrongCompressorError(f"Lossy compressor {compressor} is not valid")
+
+        try:
+            mode = CompressionModes[mode.upper()]
+        except KeyError:
+            raise WrongCompressionModeError(f"Compression mode {mode} is not valid")
+
+        try:
+            parameter = float(parameter)
+        except ValueError:
+            raise WrongParameterError
+
     elif arguments[0] == "lossless":
         compressor = Compressors.BLOSC
     elif arguments[0].lower() == "none":
