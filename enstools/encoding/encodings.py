@@ -5,7 +5,13 @@ import xarray
 import yaml
 
 from . import rules
-from hdf5plugin import SZ, SZ3, Zfp, Blosc
+from hdf5plugin import SZ, Zfp, Blosc
+
+try:
+    from hdf5plugin import SZ3
+except ImportError:
+    pass
+
 from .compressors.no_compressor import NoCompression
 from .definitions import Compressors, CompressionModes
 from .errors import WrongCompressionSpecificationError, WrongCompressionModeError, WrongCompressorError, \
