@@ -10,6 +10,14 @@ class WrongCompressionModeError(EnstoolsCompressionError):
     ...
 
 
+class WrongCompressorError(EnstoolsCompressionError):
+    ...
+
+
+class WrongParameterError(EnstoolsCompressionError):
+    ...
+
+
 class CompressionStringFormatException(EnstoolsCompressionError):
     ...
 
