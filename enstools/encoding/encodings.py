@@ -19,6 +19,14 @@ from .errors import WrongCompressionSpecificationError, WrongCompressionModeErro
 from copy import deepcopy
 from pathlib import Path
 
+import logging
+
+# Change hdf5plugin logging levels to Warning
+loggers = {name: logging.getLogger(name) for name in logging.root.manager.loggerDict}
+hdf5plugin_loggers = [key for key in loggers.keys() if key.count("hdf5plugin")]
+for key in hdf5plugin_loggers:
+    loggers[key].setLevel(logging.WARNING)
+
 
 class _Mapping(Mapping):
     """
