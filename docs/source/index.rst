@@ -4,7 +4,7 @@ Welcome to Enstools-Encoding's documentation! |docsbadge|
 
 .. attention::
     This package is a building block of `enstools-compression <https://github.com/wavestoweather/enstools-compression>`_.
-    The recomendation is to directly use **enstools-compression**.
+    The recommendation is to directly use **enstools-compression**.
     The only purpose of splitting the package was to provide a way of using compression filters with **xarray** without adding too much dependencies.
     It might be the main sound reason to use this package separately.
     
