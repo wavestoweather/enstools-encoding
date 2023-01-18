@@ -1,5 +1,5 @@
 """
-Different rules to format the compression specification string.
+Different rules to format the compression specification string as well as some default values.
 """
 
 # Separator between two variable entries
@@ -11,11 +11,14 @@ VARIABLE_NAME_SEPARATOR = ":"
 # Separator between the compression type, the compressor, the mode and the parameter
 COMPRESSION_SPECIFICATION_SEPARATOR = ","
 
-# Default Label
+# Default Labels
 DATA_DEFAULT_LABEL = "default"
 COORD_LABEL = "coordinates"
 
-# Default values
+# Default Values
 DATA_DEFAULT_VALUE = "lossless"
 COORD_DEFAULT_VALUE = "lossless"
 
+# Lossless defaults
+LOSSLESS_DEFAULT_BACKEND = "lz4"
+LOSSLESS_DEFAULT_COMPRESSION_LEVEL = 5
