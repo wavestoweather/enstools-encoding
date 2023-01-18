@@ -26,7 +26,7 @@ setup(name="enstools-encoding",
       long_description=long_description,
       long_description_content_type='text/markdown',
       url="https://github.com/wavestoweather/enstools-encoding",
-      packages=["enstools.encoding", "enstools.encoding.compressors"],
+      packages=["enstools.encoding"],
       namespace_packages=['enstools'],
 
       install_requires=[
