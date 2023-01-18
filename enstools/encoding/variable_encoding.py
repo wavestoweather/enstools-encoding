@@ -37,7 +37,7 @@ class _Mapping(Mapping):
         return len(self._kwargs)
 
 
-class Encoding(ABC):
+class Encoding(_Mapping):
     def check_validity(self) -> bool:
         ...
 
