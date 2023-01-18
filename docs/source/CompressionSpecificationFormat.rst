@@ -1,15 +1,13 @@
 Compression Specification Format
 ================================
 
-In order to define compression specifications in a way that makes it readable and easy to use by different applications in differen programming languages, we defined our own Compression Specification Format.
-One example looks like this:
+We created a Compression Specification Format, which can be easily read and utilized by various applications written in different programming languages.
+An example of this format would be:
 
     >>> lossy,zfp,rate,4.0
 
-Its purpose is to represent the specifications in a way that are easy to understand and use.
-
 The currently implemented compressors include `Blosc <https://www.blosc.org/>`_ for lossless compression,
-and `ZFP <https://computing.llnl.gov/projects/zfp>`_ and `SZ <https://szcompressor.org/>`_ for lossy compression.
+and `ZFP <https://computing.llnl.gov/projects/zfp>`_, `SZ <https://szcompressor.org/>`_ and `SZ3 <https://szcompressor.org/>`_ for lossy compression.
 In order to use lossless compression, one can simply write:
 
     >>> lossless
@@ -30,18 +28,23 @@ One example with a different backend and compression level could be:
 
 
 For lossy compression, it is mandatory to include the compressor, the mode and the parameter.
-At the moment two lossy compressors are supported: **SZ** and **ZFP**.
+At the moment the lossy supported compressors are: **ZFP**, **SZ** and **SZ3**.
 
-The two compressors have different methods and different names for them:
-    -**SZ**:
-        - **abs**: absolute threshold mode
-        - **rel**: relative threshold mode
-        - **pw_rel**: point-wise relative threshold mode
+The compressors have different methods and different names for them:
     -**ZFP**:
         - **accuracy**: absolute threshold mode
         - **rate**: number of bits-per-value
         - **precision**: keep a certain bits of precision
 
+    -**SZ**:
+        - **abs**: absolute threshold mode
+        - **rel**: relative threshold mode
+        - **pw_rel**: point-wise relative threshold mode
+    -**SZ3**:
+        - **abs**: absolute threshold mode
+        - **rel**: relative threshold mode
+        - **norm2**: using norm2.
+        - **psnr**: using the peak signal to noise ratio mode.
 
 Few examples of lossy compression specifications:
 
@@ -49,6 +52,7 @@ Few examples of lossy compression specifications:
 
     lossy,sz,abs,0.01
     lossy,zfp,rate,4.0
+    lossy,sz3,psnr,40
     lossy,sz,rel,1e-3
     lossy,zfp,precision,10
     lossy,sz,pw_rel,0.05

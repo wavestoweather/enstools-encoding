@@ -7,8 +7,8 @@ Encodings
 .. autosummary::
    :toctree: Classes
 
-        enstools.encoding.api.FilterEncodingForXarray
-        enstools.encoding.api.FilterEncodingForH5py
+        enstools.encoding.api.DatasetEncoding
+        enstools.encoding.api.VariableEncoding
 
 
 Compressors and Compression modes
