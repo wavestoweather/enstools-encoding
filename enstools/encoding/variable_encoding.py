@@ -3,7 +3,7 @@ from abc import ABC
 from .definitions import lossy_compressors_and_modes
 import logging
 
-from typing import Mapping, Union, Protocol
+from typing import Mapping, Union
 
 import hdf5plugin
 
@@ -22,6 +22,7 @@ class _Mapping(Mapping):
     """
     Subclass to implement dunder methods that are mandatory for Mapping to avoid repeating the code everywhere.
     """
+
     def __init__(self) -> None:
         super().__init__()
         self._kwargs = {}
@@ -54,6 +55,19 @@ class Encoding(_Mapping):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_string()})"
+    
+    def set_chunk_sizes(self, chunk_sizes: tuple) -> None:
+        """
+        Method to add chunksizes into the encoding dictionary.
+        Parameters
+        ----------
+        chunk_sizes
+
+        Returns
+        -------
+
+        """
+        self._kwargs["chunksizes"] = chunk_sizes
 
 
 class VariableEncoding(_Mapping):
@@ -117,12 +131,14 @@ class NullEncoding(Encoding):
 
 class LosslessEncoding(Encoding):
     def __init__(self, backend: str, compression_level: int):
+        super().__init__()
         self.backend = backend if backend is not None else rules.LOSSLESS_DEFAULT_BACKEND
         self.compression_level = compression_level if compression_level is not None \
             else rules.LOSSLESS_DEFAULT_COMPRESSION_LEVEL
 
         self.check_validity()
-        self._kwargs = self.encoding()
+        # Trying to convert it to a dictionary already here.
+        self._kwargs = dict(self.encoding())
 
     def check_validity(self) -> bool:
         if self.backend not in definitions.lossless_backends:
@@ -148,13 +164,16 @@ class LosslessEncoding(Encoding):
 
 class LossyEncoding(Encoding):
     def __init__(self, compressor: str, mode: str, parameter: Union[float, int]):
+        super().__init__()
         self.compressor = compressor
         self.mode = mode
 
         self.parameter = parameter
 
         self.check_validity()
-        self._kwargs = self.encoding()
+
+        # Trying to convert it to a dictionary already here.
+        self._kwargs = dict(self.encoding())
 
     def check_validity(self):
         # Check compressor validity
