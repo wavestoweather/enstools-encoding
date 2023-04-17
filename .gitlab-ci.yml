@@ -22,14 +22,11 @@ deploy-to-testpypi:
   image: python:3.8
   tags:
     - docker.meteo.physik.lmu.de
-#  only:
-#    - tags
+  only:
+    - tags
   script:
     - pip install twine
     - python setup.py sdist bdist_wheel
-    - echo "Dummy:'$ENVTEST'"
-    - echo "Dummy:$ENVTEST"
-    - echo "My password is:'$PYPI_TEST_PASSWORD'"
     - twine upload -u "__token__" -p "$PYPI_TEST_PASSWORD" --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*
 
 install-from-testpypi:
@@ -37,8 +34,8 @@ install-from-testpypi:
   image: python:3.8
   tags:
     - docker.meteo.physik.lmu.de
-#  only:
-#    - tags
+  only:
+    - tags
   needs: ["deploy-to-testpypi"]
   script:
     - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ enstools-encoding
