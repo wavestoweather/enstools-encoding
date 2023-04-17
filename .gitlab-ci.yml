@@ -22,20 +22,20 @@ deploy-to-testpypi:
   image: python:3.8
   tags:
     - docker.meteo.physik.lmu.de
-  only:
-    - tags
+#  only:
+#    - tags
   script:
     - pip install twine
     - python setup.py sdist bdist_wheel
-    - twine upload -u $PYPI_TEST_USER -p $PYPI_TEST_PASSWORD --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*
+    - twine upload -u "__token__" -p "$PYPI_TEST_PASSWORD" --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*
 
 install-from-testpypi:
   stage: test_install
   image: python:3.8
   tags:
     - docker.meteo.physik.lmu.de
-  only:
-    - tags
+#  only:
+#    - tags
   needs: ["deploy-to-testpypi"]
   script:
     - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ enstools-encoding
@@ -55,4 +55,4 @@ deploy-to-pypi:
   script:
     - pip install twine
     - python setup.py sdist bdist_wheel
-    - twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD --skip-existing dist/*
+    - twine upload -u "__token__" -p "$PYPI_PASSWORD" --skip-existing dist/*
