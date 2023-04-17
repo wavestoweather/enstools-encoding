@@ -17,7 +17,7 @@ test_docker:
     rules:
         - if: '$CI_COMMIT_TAG == null'
 
-deploy to testpypi:
+deploy-to-testpypi:
   stage: deploy_test
   image: python:3.8
   only:
@@ -27,10 +27,10 @@ deploy to testpypi:
     - python setup.py sdist bdist_wheel
     - twine upload -u $PYPI_TEST_USER -p $PYPI_TEST_PASSWORD --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*
 
-install from testpypi:
+install-from-testpypi:
   stage: test_install
   image: python:3.8
-  needs: ["deploy to testpypi"]
+  needs: ["deploy-to-testpypi"]
   script:
     - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ enstools-encoding
   artifacts:
@@ -38,10 +38,10 @@ install from testpypi:
     paths:
       - "*.log"
 
-deploy to pypi:
+deploy-to-pypi:
   stage: deploy_prod
   image: python:3.8
-  needs: ["install from testpypi"]
+  needs: ["install-from-testpypi"]
   script:
     - pip install twine
     - python setup.py sdist bdist_wheel
