@@ -1,9 +1,8 @@
-from abc import ABC
 
 from .definitions import lossy_compressors_and_modes
 import logging
 
-from typing import Mapping, Union, Protocol
+from typing import Mapping, Union
 
 import hdf5plugin
 
@@ -22,6 +21,7 @@ class _Mapping(Mapping):
     """
     Subclass to implement dunder methods that are mandatory for Mapping to avoid repeating the code everywhere.
     """
+
     def __init__(self) -> None:
         super().__init__()
         self._kwargs = {}
@@ -54,7 +54,7 @@ class Encoding(_Mapping):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_string()})"
-    
+
     def set_chunk_sizes(self, chunk_sizes: tuple) -> None:
         """
         Method to add chunksizes into the encoding dictionary.
@@ -97,6 +97,7 @@ class VariableEncoding(_Mapping):
     >>> VariableEncoding(backend="snappy", compression_level=9)
 
     """
+
     def __new__(cls,
                 specification: str = None,
                 compressor: str = None,
@@ -263,48 +264,6 @@ def parse_variable_specification(var_spec: str) -> Encoding:
         # In case its not lossy nor lossless, raise an exception.
         raise InvalidCompressionSpecification(f"Invalid specification {var_spec!r}")
 
-
-# class VariableEncoding(_Mapping):
-#     """
-#     Class to encapsulate compression specification parameters for a single variable.
-#
-#     It stores the compressor, the mode and the parameter.
-#
-#     It has a method to create a new instance from a specification string,
-#     a method to get the corresponding specification string from an existing object
-#     and a method to obtain the corresponding mapping expected by h5py.
-#
-#     """
-#
-#     def __init__(self, specification: Specification):
-#         # Init basic components
-#         self.specification = specification
-#
-#         self._kwargs = self.filter_mapping()
-#
-#     @staticmethod
-#     def from_string(string: str) -> 'VariableEncoding':
-#         specification = parse_variable_specification(string)
-#         """
-#         Method to create a specification object from a specification string
-#         """
-#         return VariableEncoding(specification)
-#
-#     def to_string(self) -> str:
-#         """
-#         Method to obtain a specification string from a specification object
-#         """
-#         return self.specification.to_string()
-#
-#     def filter_mapping(self) -> Mapping:
-#         """
-#         Method to get the corresponding FilterRefBase expected by h5py/xarray
-#         """
-#
-#         return self.specification.encoding()
-#
-#     def description(self):
-#         self.specification.description()
 
 def get_variable_encoding(
         specification: str = None,
