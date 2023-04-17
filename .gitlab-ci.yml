@@ -20,6 +20,8 @@ test_docker:
 deploy-to-testpypi:
   stage: deploy_test
   image: python:3.8
+  tags:
+    - docker.meteo.physik.lmu.de
   only:
     - tags
   script:
@@ -30,6 +32,10 @@ deploy-to-testpypi:
 install-from-testpypi:
   stage: test_install
   image: python:3.8
+  tags:
+    - docker.meteo.physik.lmu.de
+  only:
+    - tags
   needs: ["deploy-to-testpypi"]
   script:
     - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ enstools-encoding
@@ -41,6 +47,10 @@ install-from-testpypi:
 deploy-to-pypi:
   stage: deploy_prod
   image: python:3.8
+  only:
+    - tags
+  tags:
+    - docker.meteo.physik.lmu.de
   needs: ["install-from-testpypi"]
   script:
     - pip install twine
