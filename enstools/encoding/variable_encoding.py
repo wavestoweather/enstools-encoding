@@ -54,6 +54,19 @@ class Encoding(_Mapping):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_string()})"
+    
+    def set_chunk_sizes(self, chunk_sizes: tuple) -> None:
+        """
+        Method to add chunksizes into the encoding dictionary.
+        Parameters
+        ----------
+        chunk_sizes
+
+        Returns
+        -------
+
+        """
+        self._kwargs["chunksizes"] = chunk_sizes
 
     def set_chunk_sizes(self, chunk_sizes: tuple) -> None:
         """
