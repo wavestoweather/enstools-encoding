@@ -27,7 +27,7 @@ deploy to testpypi:
   script:
     - pip install twine
     - python setup.py sdist bdist_wheel
-    - echo "$PYPI_TEST_PASSWORD"
+    - echo "My password is:$PYPI_TEST_PASSWORD"
     - twine upload -u "__token__" -p "$PYPI_TEST_PASSWORD" --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*
 
 install from testpypi:
