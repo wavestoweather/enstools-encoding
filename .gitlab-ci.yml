@@ -3,23 +3,20 @@ stages:
     - deploy_test
     - test_install
     - deploy_prod
+    - prod_install
 
 test_docker:
     stage: test
-    image: ubuntu:rolling
-    tags: 
+    image: python:3.10
+    tags:
             - docker.meteo.physik.lmu.de
-    before_script:
-        - apt update
-        - export DEBIAN_FRONTEND=noninteractive
-        - apt install -yq git python3 python3-pip python3-venv
     script: ./run_tests.sh
     rules:
         - if: '$CI_COMMIT_TAG == null'
 
 deploy-to-testpypi:
   stage: deploy_test
-  image: python:3.8
+  image: python:3.10
   tags:
     - docker.meteo.physik.lmu.de
   only:
@@ -31,22 +28,20 @@ deploy-to-testpypi:
 
 install-from-testpypi:
   stage: test_install
-  image: python:3.8
+  image: python:3.10
   tags:
     - docker.meteo.physik.lmu.de
   only:
     - tags
   needs: ["deploy-to-testpypi"]
   script:
-    - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ enstools-encoding
-  artifacts:
-    when: on_failure
-    paths:
-      - "*.log"
+    - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ enstools-encoding --break-system-packages
+    - python3 -c "from enstools.encoding import api"
+
 
 deploy-to-pypi:
   stage: deploy_prod
-  image: python:3.8
+  image: python:3.10
   only:
     - tags
   tags:
@@ -56,3 +51,15 @@ deploy-to-pypi:
     - pip install twine
     - python setup.py sdist bdist_wheel
     - twine upload -u "__token__" -p "$PYPI_PASSWORD" --skip-existing dist/*
+
+install-from-pypi:
+  stage: prod_install
+  image: python:3.10
+  tags:
+    - docker.meteo.physik.lmu.de
+  only:
+    - tags
+  needs: ["deploy-to-pypi"]
+  script:
+    - pip install enstools-encoding --break-system-packages
+    - python3 -c "from enstools.encoding import api"
