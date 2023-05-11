@@ -1,6 +1,9 @@
+"""
+This module provides configurations and mappings related to lossy and lossless compressors.
+"""
+import hdf5plugin
 
 # Dictionary of implemented lossy compressors and their respective modes and ranges.
-# TODO: Would that be better to keep the definition of the available compressors and methods in a configuration file?
 lossy_compressors_and_modes = {
     "sz": {
         "abs": {"range": [0, float('inf')], "type": float},
@@ -21,11 +24,10 @@ lossy_compressors_and_modes = {
 }
 
 # Create a list with the lossy compressors
-lossy_compressors = [c for c in lossy_compressors_and_modes]
+lossy_compressors = list(lossy_compressors_and_modes)
 
 # Create a dictionary containing the available compression modes for each lossy compressor
-lossy_compression_modes = {c: [k for k in lossy_compressors_and_modes[c]] for c in lossy_compressors}
-
+lossy_compression_modes = {c: list(lossy_compressors_and_modes) for c in lossy_compressors}
 
 # List of available BLOSC backends for lossless compression
 lossless_backends = ['blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd']
@@ -40,7 +42,7 @@ sz_mode_map = {
 }
 
 # Mapping between compressor names and hdf5plugin classes
-import hdf5plugin
+
 compressor_map = {
     "zfp": hdf5plugin.Zfp,
     "sz": hdf5plugin.SZ,

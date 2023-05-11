@@ -1,14 +1,21 @@
+"""
+This module provides utility classes and functions for compression in Enstools.
 
-from .definitions import lossy_compressors_and_modes
+
+This module defines various encodings and exceptions for compression, as well as utility functions.
+
+"""
+
+
 import logging
-
 from typing import Mapping, Union
 
 import hdf5plugin
 
 from enstools.encoding import rules, definitions
 from enstools.encoding.errors import InvalidCompressionSpecification
-from .rules import LOSSLESS_DEFAULT_BACKEND, LOSSLESS_DEFAULT_COMPRESSION_LEVEL
+from .definitions import lossy_compressors_and_modes
+from .rules import LOSSLESS_DEFAULT_BACKEND, LOSSLESS_DEFAULT_COMPRESSION_LEVEL, COMPRESSION_SPECIFICATION_SEPARATOR
 
 # Change logging level for the hdf5plugin to avoid unnecessary warnings
 loggers = {name: logging.getLogger(name) for name in logging.root.manager.loggerDict}
@@ -40,19 +47,51 @@ class _Mapping(Mapping):
 
 
 class Encoding(_Mapping):
+    """
+    Base case for encoding representation.
+    """
     def check_validity(self) -> bool:
-        ...
+        """
+        Checks the validity of the encoding.
+
+        Returns:
+        - bool: True if the encoding is valid.
+
+        """
 
     def to_string(self) -> str:
-        ...
+        """
+        Returns the encoding specification as a string.
 
+        Returns:
+        - str: The encoding specification as a string.
+
+        """
     def encoding(self) -> Mapping:
-        ...
+        """
+        Returns the mapping of encoding parameters.
 
+        Returns:
+        - Mapping: The mapping of encoding parameters.
+
+        """
     def description(self) -> str:
-        ...
+        """
+        Returns a description of the encoding.
+
+        Returns:
+        - str: A description of the encoding.
+
+        """
 
     def __repr__(self):
+        """
+         Returns a string representation of the Encoding object.
+
+         Returns:
+         - str: A string representation of the Encoding object.
+
+         """
         return f"{self.__class__.__name__}({self.to_string()})"
     
     def set_chunk_sizes(self, chunk_sizes: tuple) -> None:
@@ -156,10 +195,11 @@ class LosslessEncoding(Encoding):
     def check_validity(self) -> bool:
         if self.backend not in definitions.lossless_backends:
             raise InvalidCompressionSpecification(f"Backend {self.backend!r} is not a valid backend.")
-        elif not (1 <= self.compression_level <= 9):
+
+        if not 1 <= self.compression_level <= 9:
             raise InvalidCompressionSpecification(f"Compression level {self.compression_level} must be within 1 and 9.")
-        else:
-            return True
+
+        return True
 
     def to_string(self) -> str:
         return rules.COMPRESSION_SPECIFICATION_SEPARATOR.join(["lossless", self.backend, str(self.compression_level)])
@@ -176,6 +216,9 @@ class LosslessEncoding(Encoding):
 
 
 class LossyEncoding(Encoding):
+    """
+        Encoding subclass for lossy compression.
+        """
     def __init__(self, compressor: str, mode: str, parameter: Union[float, int]):
         super().__init__()
         self.compressor = compressor
@@ -189,6 +232,16 @@ class LossyEncoding(Encoding):
         self._kwargs = dict(self.encoding())
 
     def check_validity(self):
+        """
+        Checks the validity of the compressor, mode, and parameter.
+
+        Raises:
+        - InvalidCompressionSpecification: If the compressor, mode, or parameter is invalid or out of range.
+
+        Returns:
+        - bool: True if the compressor, mode, and parameter are valid.
+
+        """
         # Check compressor validity
         if self.compressor not in definitions.lossy_compressors_and_modes:
             raise InvalidCompressionSpecification(f"Invalid compressor {self.compressor}")
@@ -203,7 +256,7 @@ class LossyEncoding(Encoding):
         if not isinstance(self.parameter, mode_type):
             try:
                 self.parameter = mode_type(self.parameter)
-            except TypeError:
+            except TypeError as err:
                 raise InvalidCompressionSpecification(f"Invalid parameter type {self.parameter!r}")
         # Check range
         if self.parameter <= mode_range[0] or self.parameter >= mode_range[1]:
@@ -211,20 +264,47 @@ class LossyEncoding(Encoding):
         return True
 
     def to_string(self) -> str:
+        """
+        Returns the encoding specification as a string.
+
+        Returns:
+        - str: The encoding specification as a string.
+
+        """
         return rules.COMPRESSION_SPECIFICATION_SEPARATOR.join(
             ["lossy", self.compressor, self.mode, str(self.parameter)])
 
     def encoding(self) -> Mapping:
+        """
+        Returns the mapping of encoding parameters.
 
+        Returns:
+        - Mapping: The mapping of encoding parameters.
+
+        """
         mode = definitions.sz_mode_map[self.mode] if self.mode in definitions.sz_mode_map else self.mode
         arguments = {mode: self.parameter}
         return definitions.compressor_map[self.compressor](**arguments)
 
     def description(self) -> str:
+        """
+        Returns a description of the lossy encoding.
+
+        Returns:
+        - str: A description of the lossy encoding.
+
+        """
         return f"Lossy compressed using the HDF5 filters with specification: {self.to_string()} " \
                f"(Using {self.compressor!r} with mode {self.mode!r} and parameter {self.parameter})"
 
     def __repr__(self):
+        """
+        Returns a string representation of the LossyEncoding object.
+
+        Returns:
+        - str: A string representation of the LossyEncoding object.
+
+        """
         return f"{self.__class__.__name__}(compressor={self.compressor}, mode={self.mode}, parameter={self.parameter})"
 
 
@@ -243,7 +323,6 @@ def parse_variable_specification(var_spec: str) -> Encoding:
     if var_spec in (None, "None", "none"):
         return NullEncoding()
 
-    from enstools.encoding.rules import COMPRESSION_SPECIFICATION_SEPARATOR
     # Split the specification in the different parts.
     var_spec_parts = var_spec.split(COMPRESSION_SPECIFICATION_SEPARATOR)
     # Treatment for lossless
@@ -252,7 +331,7 @@ def parse_variable_specification(var_spec: str) -> Encoding:
         compression_level = int(var_spec_parts[2]) if len(var_spec_parts) > 2 else None
         return LosslessEncoding(backend, compression_level)
     # Treatment for lossy
-    elif var_spec_parts[0] == "lossy":
+    if var_spec_parts[0] == "lossy":
         # Lossy specifications must have 4 elements (lossy,compressor,mode,parameter)
         if len(var_spec_parts) != 4:
             raise InvalidCompressionSpecification(f"Invalid specification {var_spec!r}")
@@ -273,9 +352,9 @@ def parse_variable_specification(var_spec: str) -> Encoding:
         except ValueError:
             raise InvalidCompressionSpecification(f"Could not cast {specification!r} to type {specification_type!r}")
         return LossyEncoding(compressor, mode, specification)
-    else:
-        # In case its not lossy nor lossless, raise an exception.
-        raise InvalidCompressionSpecification(f"Invalid specification {var_spec!r}")
+
+    # In case its not lossy nor lossless, raise an exception.
+    raise InvalidCompressionSpecification(f"Invalid specification {var_spec!r}")
 
 
 def get_variable_encoding(
@@ -301,9 +380,9 @@ def get_variable_encoding(
         "Only one of the options can be used to create an Encoding"
     if specification:
         return parse_variable_specification(specification)
-    elif compressor:
+    if compressor:
         return LossyEncoding(compressor=compressor, mode=mode, parameter=parameter)
-    elif backend:
+    if backend:
         if compression_level is None:
             compression_level = LOSSLESS_DEFAULT_COMPRESSION_LEVEL
         return LosslessEncoding(backend=backend, compression_level=compression_level)

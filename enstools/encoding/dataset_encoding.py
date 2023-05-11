@@ -1,20 +1,54 @@
+"""
+This module provides utility functions and a class for handling compression specifications
+and chunking in xarray Datasets.
+
+Functions:
+- convert_size(size_bytes): Converts a given size in bytes to a human-readable format.
+- convert_to_bytes(size_string): Converts a size string (e.g., '5MB') to the number of bytes.
+- compression_dictionary_to_string(compression_dictionary): Converts a dictionary with
+  compression entries to a single-line specification string.
+- parse_full_specification(spec): Parses a full compression specification and returns a
+  dictionary of variable encodings.
+- is_a_valid_dataset_compression_specification(specification): Checks if a compression
+  specification is valid for a dataset.
+- find_chunk_sizes(data_array, chunk_size): Determines chunk sizes for each dimension of a
+  data array based on a desired chunk size.
+
+Class:
+- DatasetEncoding: Encapsulates compression specification parameters for a full dataset.
+  Provides methods to generate encodings and add metadata.
+
+"""
+
 import os
+import re
 from copy import deepcopy
 from pathlib import Path
 from typing import Hashable, Union, Dict
+import math
 
+import numpy as np
 import xarray
 import yaml
-import numpy as np
 
 from . import rules
 from .errors import InvalidCompressionSpecification
 from .variable_encoding import _Mapping, parse_variable_specification, Encoding, \
     NullEncoding
+from .rules import VARIABLE_SEPARATOR, VARIABLE_NAME_SEPARATOR, \
+    DATA_DEFAULT_LABEL, DATA_DEFAULT_VALUE, COORD_LABEL, COORD_DEFAULT_VALUE
 
 
 def convert_size(size_bytes):
-    import math
+    """
+    Converts a given size in bytes to a human-readable format.
+
+    Args:
+        size_bytes (int): Size in bytes.
+
+    Returns:
+        str: Size in human-readable format (e.g., '5MB').
+    """
     if size_bytes < 0:
         prefix = "-"
         size_bytes = -size_bytes
@@ -23,11 +57,12 @@ def convert_size(size_bytes):
 
     if size_bytes == 0:
         return "0B"
-    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-    i = int(math.floor(math.log(size_bytes, 1024)))
-    p = math.pow(1024, i)
-    s = round(size_bytes / p, 2)
-    return f"{prefix}{s}{size_name[i]}"
+
+    size_units = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    magnitude = int(math.floor(math.log(size_bytes, 1024)))
+    factor = math.pow(1024, magnitude)
+    size = round(size_bytes / factor, 2)
+    return f"{prefix}{size}{size_units[magnitude]}"
 
 
 def convert_to_bytes(size_string):
@@ -40,7 +75,7 @@ def convert_to_bytes(size_string):
     Returns:
     int: The number of bytes.
     """
-    import re
+
     size_string = size_string.upper()
     digits = re.match(r'\d+(?:\.\d+)?', size_string)  # matches digits and optionally a dot followed by more digits
     if digits:
@@ -65,23 +100,35 @@ def compression_dictionary_to_string(compression_dictionary: Dict[str, str]) -> 
 
 
 def parse_full_specification(spec: Union[str, None]) -> Dict[str, Encoding]:
-    from enstools.encoding.rules import VARIABLE_SEPARATOR, VARIABLE_NAME_SEPARATOR, \
-        DATA_DEFAULT_LABEL, DATA_DEFAULT_VALUE, COORD_LABEL, COORD_DEFAULT_VALUE
+    """
+    Parses a full compression specification and returns a dictionary of variable encodings.
+
+    Args:
+        spec (Union[str, None]): The full compression specification as a string or None.
+
+    Returns:
+        Dict[str, Encoding]: A dictionary mapping variable names to their corresponding encodings.
+
+    Raises:
+        InvalidCompressionSpecification: If a variable has multiple definitions in the specification.
+
+    """
+
     result = {}
 
     if spec is None:
         spec = "None"
 
     parts = spec.split(VARIABLE_SEPARATOR)
-    for p in parts:
+    for part in parts:
         # For each part, check if there's a variable name.
         # If there's a variable name, split the name and the specification
-        if VARIABLE_NAME_SEPARATOR in p:
-            var_name, var_spec = p.split(VARIABLE_NAME_SEPARATOR)
+        if VARIABLE_NAME_SEPARATOR in part:
+            var_name, var_spec = part.split(VARIABLE_NAME_SEPARATOR)
         # Otherwise, it corresponds to the default.
         else:
             var_name = DATA_DEFAULT_LABEL
-            var_spec = p
+            var_spec = part
 
         # If the variable name was already in the dictionary, raise an error.
         if var_name in result:
@@ -125,6 +172,20 @@ class DatasetEncoding(_Mapping):
 
     @staticmethod
     def get_a_single_compression_string(compression: Union[str, Dict[str, str], Path, None]) -> Union[str, None]:
+        """
+        Converts the compression parameter into a single compression specification string.
+
+        Args:
+            compression (Union[str, Dict[str, str], Path, None]): The compression parameter,
+            which can be a string, a dictionary, a file path, or None.
+
+        Returns:
+            Union[str, None]: The single compression specification string or None.
+
+        Raises:
+            InvalidCompressionSpecification: If the compression argument is not a valid type.
+
+        """
         # The compression parameter can be a string or a dictionary.
 
         # In case it is a string, it can be directly a compression specification or a yaml file.
@@ -136,21 +197,28 @@ class DatasetEncoding(_Mapping):
             # Just to make sure that we have all the mandatory fields (default, coordinates), we will convert
             # the input dictionary to a single specification string and convert it back.
             return compression_dictionary_to_string(compression)
-        elif isinstance(compression, Path):
-            with compression.open("r") as stream:
+        if isinstance(compression, Path):
+            with compression.open("r", encoding="utf-8") as stream:
                 dict_of_strings = yaml.safe_load(stream)
             return compression_dictionary_to_string(dict_of_strings)
-        elif isinstance(compression, str):
+        if isinstance(compression, str):
             # Convert the single string in a dictionary with an entry for each specified variable plus the defaults
             # for data and coordinates
             return compression
-        elif compression is None:
+        if compression is None:
             return None
-        else:
-            raise InvalidCompressionSpecification(
+
+        raise InvalidCompressionSpecification(
                 f"The argument 'compression' should be a string, a dictionary or a Path. It is {type(compression)!r}-")
 
     def encoding(self):
+        """
+        Generate the encoding dictionary for all variables in the dataset.
+
+        Returns:
+            dict: A dictionary mapping variable names to their corresponding encodings.
+
+        """
         # Get the defaults
         data_default = self.variable_encodings[rules.DATA_DEFAULT_LABEL]
         coordinates_default = self.variable_encodings[rules.COORD_LABEL]
@@ -185,12 +253,12 @@ class DatasetEncoding(_Mapping):
 
         # Loop over all the variables
         for variable in self.dataset.data_vars:
-            da = self.dataset[variable]
-            type_size = da.dtype.itemsize
+            data_array = self.dataset[variable]
+            type_size = data_array.dtype.itemsize
 
             optimal_chunk_size = chunk_memory_size / type_size
-            chunk_sizes = find_chunk_sizes(data_array=da, chunk_size=optimal_chunk_size)
-            chunk_sizes = tuple(chunk_sizes[d] for d in da.dims)
+            chunk_sizes = find_chunk_sizes(data_array=data_array, chunk_size=optimal_chunk_size)
+            chunk_sizes = tuple(chunk_sizes[d] for d in data_array.dims)
             encodings[variable].set_chunk_sizes(chunk_sizes)
 
     @property
@@ -209,6 +277,21 @@ class DatasetEncoding(_Mapping):
 
 
 def is_a_valid_dataset_compression_specification(specification):
+    """
+        Checks if a compression specification is valid for a dataset.
+
+        Args:
+            specification: The compression specification to be validated.
+
+        Returns:
+            bool: True if the specification is valid, False otherwise.
+
+        Note:
+            - The function attempts to parse the specification using the `parse_full_specification` function.
+            - If the specification is successfully parsed without raising an exception, it is considered valid.
+            - If an `InvalidCompressionSpecification` exception is raised during parsing,
+            the specification is considered invalid.
+    """
     try:
         _ = parse_full_specification(specification)
         return True
@@ -217,7 +300,16 @@ def is_a_valid_dataset_compression_specification(specification):
 
 
 def find_chunk_sizes(data_array, chunk_size):
-    import math
+    """
+    Determines the chunk sizes for each dimension of a data array based on a desired chunk size.
+
+    Args:
+        data_array: The data array for which chunk sizes are determined.
+        chunk_size: The desired chunk size in terms of the number of elements.
+
+    Returns:
+        dict: A dictionary mapping each dimension to its corresponding chunk size.
+    """
     total_points = np.prod(data_array.shape)
     num_chunks = max(1, int(total_points // chunk_size))
     chunk_sizes = {}
