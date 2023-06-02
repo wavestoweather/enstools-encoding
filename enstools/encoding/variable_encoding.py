@@ -107,19 +107,6 @@ class Encoding(_Mapping):
         """
         self._kwargs["chunksizes"] = chunk_sizes
 
-    def set_chunk_sizes(self, chunk_sizes: tuple) -> None:
-        """
-        Method to add chunksizes into the encoding dictionary.
-        Parameters
-        ----------
-        chunk_sizes
-
-        Returns
-        -------
-
-        """
-        self._kwargs["chunksizes"] = chunk_sizes
-
 
 class VariableEncoding(_Mapping):
     """
