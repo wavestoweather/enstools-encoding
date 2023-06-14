@@ -31,6 +31,7 @@ import numpy as np
 import xarray
 import yaml
 
+import enstools.encoding.chunk_size
 from . import rules
 from .errors import InvalidCompressionSpecification
 from .variable_encoding import _Mapping, parse_variable_specification, Encoding, \
@@ -236,7 +237,10 @@ class DatasetEncoding(_Mapping):
         all_encodings = {**coordinate_encodings, **data_variable_encodings}
 
         # Need to specify chunk size, otherwise it breaks down.
-        self.chunk(encodings=all_encodings)
+        self.chunk(
+            encodings=all_encodings,
+            chunk_memory_size=enstools.encoding.chunk_size.chunk_size,
+        )
 
         return all_encodings
 
@@ -315,12 +319,19 @@ def find_chunk_sizes(data_array, chunk_size):
     chunk_sizes = {}
     chunk_number = {}
 
-    # Sort dimensions by size
-    dims = sorted(data_array.dims, key=lambda x: data_array[x].shape)
+    # Sort dimensions such that 'time' is always first and rest by size
+    dims = sorted(data_array.dims, key=lambda x: (x != 'time', data_array[x].shape))
+
     pending_num_chunks = num_chunks
     for dim in dims:
-        chunk_sizes[dim] = max(1, int(data_array[dim].size // pending_num_chunks))
-        chunk_number[dim] = data_array[dim].size // chunk_sizes[dim]
+        if dim == 'time' or pending_num_chunks > 1:
+            chunk_sizes[dim] = max(1, int(data_array[dim].size // pending_num_chunks))
+            chunk_number[dim] = data_array[dim].size // chunk_sizes[dim]
 
-        pending_num_chunks = math.ceil(pending_num_chunks / chunk_number[dim])
+            pending_num_chunks = math.ceil(pending_num_chunks / chunk_number[dim])
+        else:
+            # If we have already chunked in the 'time' dimension and pending_num_chunks <= 1,
+            # then keep the whole dimension together in one chunk
+            chunk_sizes[dim] = data_array[dim].size
     return chunk_sizes
+
